@@ -60,7 +60,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 Provides:       pymongo-gridfs = %{version}-%{release}
 Obsoletes:      pymongo-gridfs <= 2.1.1-3
 
-%description gridfs
+%description python-pymongo-gridfs
 GridFS is a storage specification for large objects in MongoDB.
 
 %if 0%{?with_python3}
