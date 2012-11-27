@@ -141,7 +141,7 @@ rm -rf %{buildroot}
 %{python3_sitearch}/pymongo-%{version}-*.egg-info
 %endif # with_python3
 
-%files gridfs
+%files python-pymongo-gridfs
 %defattr(-,root,root,-)
 %doc LICENSE PKG-INFO README.rst doc
 %{python_sitearch}/gridfs
