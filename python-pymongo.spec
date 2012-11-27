@@ -12,7 +12,7 @@
 
 Name:           python-pymongo
 Version:        2.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -53,10 +53,12 @@ The Python driver for MongoDB.  This package contains the python3 version of
 this module.
 %endif # with_python3
 
-%package gridfs
+%package python-pymongo-gridfs
 Summary:        Python GridFS driver for MongoDB
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
+Provides:       pymongo-gridfs = %{version}-%{release}
+Obsoletes:      pymongo-gridfs <= 2.1.1-3
 
 %description gridfs
 GridFS is a storage specification for large objects in MongoDB.
@@ -190,6 +192,9 @@ nosetests --exclude="$exclude"
 popd
 
 %changelog
+* Tue Nov 27 2012 Andrew McNabb <amcnabb@mcnabbs.org> - 2.3-4
+- Fix obsoletes for python-pymongo-gridfs subpackage
+
 * Tue Nov 27 2012 Andrew McNabb <amcnabb@mcnabbs.org> - 2.3-3
 - Fix requires to include the arch, and add docs to all subpackages
 
