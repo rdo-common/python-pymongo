@@ -12,7 +12,7 @@
 
 Name:           python-pymongo
 Version:        2.3
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -192,6 +192,9 @@ nosetests --exclude="$exclude"
 popd
 
 %changelog
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.3-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
+
 * Sat Jan  5 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.3-6
 - Fix dependency of python3-pymongo-gridfs (bug #892214)
 
