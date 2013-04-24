@@ -12,7 +12,7 @@
 
 Name:           python-pymongo
 Version:        2.5
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -234,11 +234,13 @@ exclude+='|^test_use_greenlets$'
 exclude+='|^test_with_start_request$'
 exclude+=')'
 pushd test
-truncate --size=0 __init__.py
 nosetests --exclude="$exclude"
 popd
 
 %changelog
+* Wed Apr 24 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-4
+- Fix the test running procedure
+
 * Wed Apr 24 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-3
 - Exclude tests in pymongo 2.5 that depend on MongoDB
 
