@@ -12,7 +12,7 @@
 
 Name:           python-pymongo
 Version:        2.5
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -171,7 +171,7 @@ rm -rf %{buildroot}
 exclude+='|^test_auto_auth_login$'
 exclude+='|^test_auto_reconnect_exception_when_read_preference_is_secondary$'
 exclude+='|^test_auto_start_request$'
-exclude+='(^test_binary$'
+exclude+='|^test_binary$'
 exclude+='|^test_collection$'
 exclude+='|^test_common$'
 exclude+='|^test_config_ssl$'
@@ -239,7 +239,7 @@ nosetests --exclude="$exclude"
 popd
 
 %changelog
-* Wed Apr 24 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-2
+* Wed Apr 24 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-3
 - Exclude tests in pymongo 2.5 that depend on MongoDB
 
 * Mon Apr 22 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-1
