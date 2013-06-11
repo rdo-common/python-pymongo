@@ -12,7 +12,7 @@
 
 Name:           python-pymongo
 Version:        2.5
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -24,7 +24,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       python-bson = %{version}-%{release}
 
 Provides:       pymongo = %{version}-%{release}
-Obsoletes:      pymongo <= 2.1.1-3
+Obsoletes:      pymongo <= 2.1.1-4
 
 BuildRequires:  python2-devel
 BuildRequires:  python-nose
@@ -238,6 +238,9 @@ nosetests --exclude="$exclude"
 popd
 
 %changelog
+* Tue Jun 11 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-5
+- Bump the obsoletes version
+
 * Wed Apr 24 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-4
 - Fix the test running procedure
 
