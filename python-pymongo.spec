@@ -11,8 +11,8 @@
 }
 
 Name:           python-pymongo
-Version:        2.5
-Release:        5%{?dist}
+Version:        2.5.2
+Release:        1%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -172,6 +172,7 @@ exclude+='|^test_auto_auth_login$'
 exclude+='|^test_auto_reconnect_exception_when_read_preference_is_secondary$'
 exclude+='|^test_auto_start_request$'
 exclude+='|^test_binary$'
+exclude+='|^test_client$'
 exclude+='|^test_collection$'
 exclude+='|^test_common$'
 exclude+='|^test_config_ssl$'
@@ -215,6 +216,7 @@ exclude+='|^test_pooling_gevent$'
 exclude+='|^test_properties$'
 exclude+='|^test_pymongo$'
 exclude+='|^test_read_preferences$'
+exclude+='|^test_replica_set_client$'
 exclude+='|^test_replica_set_connection$'
 exclude+='|^test_replica_set_connection_alias$'
 exclude+='|^test_repr$'
@@ -238,6 +240,9 @@ nosetests --exclude="$exclude"
 popd
 
 %changelog
+* Wed Jun 12 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5.2-1
+- Update to pymongo 2.5.2
+
 * Tue Jun 11 2013 Andrew McNabb <amcnabb@mcnabbs.org> - 2.5-5
 - Bump the obsoletes version
 
