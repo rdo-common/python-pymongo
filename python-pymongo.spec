@@ -12,7 +12,7 @@
 
 Name:           python-pymongo
 Version:        2.5.2
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -240,6 +240,9 @@ nosetests --exclude="$exclude"
 popd
 
 %changelog
+* Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.2-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.2-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
