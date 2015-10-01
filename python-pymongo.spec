@@ -1,7 +1,11 @@
-%if 0%{?fedora} > 17
+%if 0%{?fedora}
 %global with_python3 1
-%else
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+%endif
+
+%if 0%{?rhel} && 0%{?rhel} <= 6
+%{!?__python2:        %global __python2 /usr/bin/python2}
+%{!?python2_sitelib:  %global python2_sitelib %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%{!?python2_sitearch: %global python2_sitearch %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
 
 # Fix private-shared-object-provides error
@@ -11,8 +15,8 @@
 }
 
 Name:           python-pymongo
-Version:        2.5.2
-Release:        7%{?dist}
+Version:        3.0.3
+Release:        1%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -20,6 +24,8 @@ Group:          Development/Languages
 License:        ASL 2.0 and MIT
 URL:            http://api.mongodb.org/python
 Source0:        http://pypi.python.org/packages/source/p/pymongo/pymongo-%{version}.tar.gz
+Patch01:        0001-Serverless-test-suite-workaround.patch
+Patch02:        0002-Use-ssl_match_hostname-from-backports.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:       python-bson = %{version}-%{release}
 
@@ -29,6 +35,11 @@ Obsoletes:      pymongo <= 2.1.1-4
 BuildRequires:  python2-devel
 BuildRequires:  python-nose
 BuildRequires:  python-setuptools
+%if 0%{?rhel} && 0%{?rhel} <= 6
+BuildRequires:  python-unittest2
+%endif
+BuildRequires:  python-backports-ssl_match_hostname
+Requires:       python-backports-ssl_match_hostname
 
 %if 0%{?with_python3}
 BuildRequires:  python-tools
@@ -97,7 +108,11 @@ contains the python3 version of this module.
 
 %prep
 %setup -q -n pymongo-%{version}
+%patch01 -p1 -b .test
+%patch02 -p1 -b .ssl
 rm -r pymongo.egg-info
+# remove bundled ssl.mast_hostname code
+rm pymongo/ssl_match_hostname.py
 
 %if 0%{?with_python3}
 rm -rf %{py3dir}
@@ -106,7 +121,7 @@ cp -a . %{py3dir}
 %endif # with_python3
 
 %build
-CFLAGS="%{optflags}" %{__python} setup.py build
+CFLAGS="%{optflags}" %{__python2} setup.py build
 
 %if 0%{?with_python3}
 pushd %{py3dir}
@@ -116,11 +131,17 @@ popd
 
 %install
 rm -rf %{buildroot}
-%{__python} setup.py install --skip-build --root $RPM_BUILD_ROOT
+%{__python2} setup.py install --skip-build --root $RPM_BUILD_ROOT
+# Fix permissions
+chmod 755 %{buildroot}%{python2_sitearch}/bson/*.so
+chmod 755 %{buildroot}%{python2_sitearch}/pymongo/*.so
 
 %if 0%{?with_python3}
 pushd %{py3dir}
 %{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT
+# Fix permissions
+chmod 755 %{buildroot}%{python3_sitearch}/bson/*.so
+chmod 755 %{buildroot}%{python3_sitearch}/pymongo/*.so
 popd
 %endif # with_python3
 
@@ -130,8 +151,8 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %doc LICENSE PKG-INFO README.rst doc
-%{python_sitearch}/pymongo
-%{python_sitearch}/pymongo-%{version}-*.egg-info
+%{python2_sitearch}/pymongo
+%{python2_sitearch}/pymongo-%{version}-*.egg-info
 
 %if 0%{?with_python3}
 %files -n python3-pymongo
@@ -144,7 +165,7 @@ rm -rf %{buildroot}
 %files gridfs
 %defattr(-,root,root,-)
 %doc LICENSE PKG-INFO README.rst doc
-%{python_sitearch}/gridfs
+%{python2_sitearch}/gridfs
 
 %if 0%{?with_python3}
 %files -n python3-pymongo-gridfs
@@ -156,7 +177,7 @@ rm -rf %{buildroot}
 %files -n python-bson
 %defattr(-,root,root,-)
 %doc LICENSE PKG-INFO README.rst doc
-%{python_sitearch}/bson
+%{python2_sitearch}/bson
 
 %if 0%{?with_python3}
 %files -n python3-bson
@@ -166,6 +187,9 @@ rm -rf %{buildroot}
 %endif # with_python3
 
 %check
+%if 0%{?rhel} && 0%{?rhel} <= 6
+# do not run test under EL6
+%else
 # Exclude tests that require an active MongoDB connection
  exclude='(^test_auth_from_uri$'
 exclude+='|^test_auto_auth_login$'
@@ -182,10 +206,12 @@ exclude+='|^test_constants$'
 exclude+='|^test_contextlib$'
 exclude+='|^test_copy_db$'
 exclude+='|^test_cursor$'
+exclude+='|^test_crud$'
 exclude+='|^test_database$'
 exclude+='|^test_database_names$'
 exclude+='|^test_delegated_auth$'
 exclude+='|^test_disconnect$'
+exclude+='|^test_discovery_and_monitoring$'
 exclude+='|^test_document_class$'
 exclude+='|^test_drop_database$'
 exclude+='|^test_equality$'
@@ -225,6 +251,8 @@ exclude+='|^test_safe_insert$'
 exclude+='|^test_safe_update$'
 exclude+='|^test_schedule_refresh$'
 exclude+='|^test_server_disconnect$'
+exclude+='|^test_server_selection$'
+exclude+='|^test_server_selection_rtt$'
 exclude+='|^test_son_manipulator$'
 exclude+='|^test_threading$'
 exclude+='|^test_threads$'
@@ -238,8 +266,13 @@ exclude+=')'
 pushd test
 nosetests --exclude="$exclude"
 popd
+%endif
 
 %changelog
+* Thu Oct 01 2015 Haïkel Guémar <hguemar@fedoraproject.org> - 3.0.3-1
+- Upstream 3.0.3
+- Fix CVE-2013-7440 (RHBZ#1231231 #1231232)
+
 * Thu Jun 18 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.5.2-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
 

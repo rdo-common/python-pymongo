@@ -1,0 +1,39 @@
+From d6d5496f555e1bdb3d5f4ca44a0141ce3bd80074 Mon Sep 17 00:00:00 2001
+From: Haikel Guemar <hguemar@fedoraproject.org>
+Date: Thu, 1 Oct 2015 11:45:17 +0200
+Subject: [PATCH 2/2] Use ssl_match_hostname from backports
+
+---
+ pymongo/errors.py | 2 +-
+ pymongo/pool.py   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pymongo/errors.py b/pymongo/errors.py
+index bcd0df5..82bfd5f 100644
+--- a/pymongo/errors.py
++++ b/pymongo/errors.py
+@@ -19,7 +19,7 @@ from bson.errors import *
+ try:
+     from ssl import CertificateError
+ except ImportError:
+-    from pymongo.ssl_match_hostname import CertificateError
++    from backports.ssl_match_hostname import CertificateError
+ 
+ 
+ class PyMongoError(Exception):
+diff --git a/pymongo/pool.py b/pymongo/pool.py
+index e557ab5..50593bd 100644
+--- a/pymongo/pool.py
++++ b/pymongo/pool.py
+@@ -45,7 +45,7 @@ try:
+     from ssl import match_hostname, CertificateError
+ except ImportError:
+     # These don't require the ssl module
+-    from pymongo.ssl_match_hostname import match_hostname, CertificateError
++    from backports.ssl_match_hostname import match_hostname, CertificateError
+ 
+ 
+ def _raise_connection_failure(address, error):
+-- 
+2.5.0
+
