@@ -16,7 +16,7 @@
 
 Name:           python-pymongo
 Version:        3.0.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -269,6 +269,9 @@ popd
 %endif
 
 %changelog
+* Wed Nov 04 2015 Matej Stuchlik <mstuchli@redhat.com> - 3.0.3-2
+- Rebuilt for Python 3.5
+
 * Thu Oct 01 2015 Haïkel Guémar <hguemar@fedoraproject.org> - 3.0.3-1
 - Upstream 3.0.3
 - Fix CVE-2013-7440 (RHBZ#1231231 #1231232)
