@@ -16,7 +16,7 @@
 
 Name:           python-pymongo
 Version:        3.0.3
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
@@ -117,7 +117,6 @@ rm pymongo/ssl_match_hostname.py
 %if 0%{?with_python3}
 rm -rf %{py3dir}
 cp -a . %{py3dir}
-2to3 --write --nobackups --no-diffs %{py3dir}
 %endif # with_python3
 
 %build
@@ -269,6 +268,9 @@ popd
 %endif
 
 %changelog
+* Mon Jan 18 2016 Randy Barlow <rbarlow@redhat.com> - 3.0.3-3
+- Do not use 2to3 for Python 3 (#1294130).
+
 * Wed Nov 04 2015 Matej Stuchlik <mstuchli@redhat.com> - 3.0.3-2
 - Rebuilt for Python 3.5
 
