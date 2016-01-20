@@ -15,22 +15,18 @@
 }
 
 Name:           python-pymongo
-Version:        3.0.3
-Release:        3%{?dist}
+Version:        3.2
+Release:        1%{?dist}
 Summary:        Python driver for MongoDB
 
 Group:          Development/Languages
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
 URL:            http://api.mongodb.org/python
-Source0:        http://pypi.python.org/packages/source/p/pymongo/pymongo-%{version}.tar.gz
+Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version}.tar.gz
 Patch01:        0001-Serverless-test-suite-workaround.patch
 Patch02:        0002-Use-ssl_match_hostname-from-backports.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires:       python-bson = %{version}-%{release}
-
-Provides:       pymongo = %{version}-%{release}
-Obsoletes:      pymongo <= 2.1.1-4
 
 BuildRequires:  python2-devel
 BuildRequires:  python-nose
@@ -39,10 +35,10 @@ BuildRequires:  python-setuptools
 BuildRequires:  python-unittest2
 %endif
 BuildRequires:  python-backports-ssl_match_hostname
-Requires:       python-backports-ssl_match_hostname
 
 %if 0%{?with_python3}
 BuildRequires:  python-tools
+BuildRequires:  python2-sphinx
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 %endif # if with_python3
@@ -50,54 +46,37 @@ BuildRequires:  python3-setuptools
 # Mongodb must run on a little-endian CPU (see bug #630898)
 ExcludeArch:    ppc ppc64 %{sparc} s390 s390x
 
+
 %description
 The Python driver for MongoDB.
 
-%if 0%{?with_python3}
-%package -n python3-pymongo
-Summary:        Python driver for MongoDB
-Group:          Development/Languages
-Requires:       python3-bson = %{version}-%{release}
 
-%description -n python3-pymongo
-The Python driver for MongoDB.  This package contains the python3 version of
-this module.
-%endif # with_python3
+%package doc
+Summary: Documentation for python-pymongo
 
-%package gridfs
-Summary:        Python GridFS driver for MongoDB
-Group:          Development/Libraries
-Requires:       %{name}%{?_isa} = %{version}-%{release}
-Provides:       pymongo-gridfs = %{version}-%{release}
-Obsoletes:      pymongo-gridfs <= 2.1.1-4
 
-%description gridfs
-GridFS is a storage specification for large objects in MongoDB.
+%description doc
+Documentation for python-pymongo.
 
-%if 0%{?with_python3}
-%package -n python3-pymongo-gridfs
-Summary:        Python GridFS driver for MongoDB
-Group:          Development/Libraries
-Requires:       python3-pymongo%{?_isa} = %{version}-%{release}
 
-%description -n python3-pymongo-gridfs
-GridFS is a storage specification for large objects in MongoDB.  This package
-contains the python3 version of this module.
-%endif # with_python3
-
-%package -n python-bson
+%package -n python2-bson
 Summary:        Python bson library
 Group:          Development/Libraries
+%{?python_provide:%python_provide python2-bson}
 
-%description -n python-bson
+
+%description -n python2-bson
 BSON is a binary-encoded serialization of JSON-like documents. BSON is designed
 to be lightweight, traversable, and efficient. BSON, like JSON, supports the
 embedding of objects and arrays within other objects and arrays.
+
 
 %if 0%{?with_python3}
 %package -n python3-bson
 Summary:        Python bson library
 Group:          Development/Libraries
+%{?python_provide:%python_provide python3-bson}
+
 
 %description -n python3-bson
 BSON is a binary-encoded serialization of JSON-like documents. BSON is designed
@@ -106,11 +85,68 @@ embedding of objects and arrays within other objects and arrays.  This package
 contains the python3 version of this module.
 %endif # with_python3
 
+
+%package -n python2-pymongo
+Summary:        Python driver for MongoDB
+Group:          Development/Languages
+Requires:       python-backports-ssl_match_hostname
+Requires:       python2-bson = %{version}-%{release}
+
+Provides:       pymongo = %{version}-%{release}
+Obsoletes:      pymongo <= 2.1.1-4
+%{?python_provide:%python_provide python2-pymongo}
+
+
+%description -n python2-pymongo
+The Python driver for MongoDB.  This package contains the python2 version of
+this module.
+
+
+%if 0%{?with_python3}
+%package -n python3-pymongo
+Summary:        Python driver for MongoDB
+Group:          Development/Languages
+Requires:       python3-bson = %{version}-%{release}
+%{?python_provide:%python_provide python3-pymongo}
+
+
+%description -n python3-pymongo
+The Python driver for MongoDB.  This package contains the python3 version of
+this module.
+%endif # with_python3
+
+
+%package -n python2-pymongo-gridfs
+Summary:        Python GridFS driver for MongoDB
+Group:          Development/Libraries
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Provides:       pymongo-gridfs = %{version}-%{release}
+Obsoletes:      pymongo-gridfs <= 2.1.1-4
+%{?python_provide:%python_provide python2-pymongo-gridfs}
+
+
+%description -n python2-pymongo-gridfs
+GridFS is a storage specification for large objects in MongoDB.
+
+
+%if 0%{?with_python3}
+%package -n python3-pymongo-gridfs
+Summary:        Python GridFS driver for MongoDB
+Group:          Development/Libraries
+Requires:       python3-pymongo%{?_isa} = %{version}-%{release}
+%{?python_provide:%python_provide python3-pymongo-gridfs}
+
+
+%description -n python3-pymongo-gridfs
+GridFS is a storage specification for large objects in MongoDB.  This package
+contains the python3 version of this module.
+%endif # with_python3
+
+
 %prep
-%setup -q -n pymongo-%{version}
+%setup -q -n mongo-python-driver-%{version}
 %patch01 -p1 -b .test
 %patch02 -p1 -b .ssl
-rm -r pymongo.egg-info
 # remove bundled ssl.mast_hostname code
 rm pymongo/ssl_match_hostname.py
 
@@ -118,6 +154,7 @@ rm pymongo/ssl_match_hostname.py
 rm -rf %{py3dir}
 cp -a . %{py3dir}
 %endif # with_python3
+
 
 %build
 CFLAGS="%{optflags}" %{__python2} setup.py build
@@ -127,6 +164,11 @@ pushd %{py3dir}
 CFLAGS="%{optflags}" %{__python3} setup.py build
 popd
 %endif # with_python3
+
+pushd doc
+make html
+popd
+
 
 %install
 rm -rf %{buildroot}
@@ -144,46 +186,65 @@ chmod 755 %{buildroot}%{python3_sitearch}/pymongo/*.so
 popd
 %endif # with_python3
 
+
 %clean
 rm -rf %{buildroot}
 
-%files
-%defattr(-,root,root,-)
-%doc LICENSE PKG-INFO README.rst doc
-%{python2_sitearch}/pymongo
-%{python2_sitearch}/pymongo-%{version}-*.egg-info
 
-%if 0%{?with_python3}
-%files -n python3-pymongo
-%defattr(-,root,root,-)
-%doc LICENSE PKG-INFO README.rst doc
-%{python3_sitearch}/pymongo
-%{python3_sitearch}/pymongo-%{version}-*.egg-info
-%endif # with_python3
+%files doc
+%license LICENSE
+%doc doc/_build/html/*
 
-%files gridfs
-%defattr(-,root,root,-)
-%doc LICENSE PKG-INFO README.rst doc
-%{python2_sitearch}/gridfs
 
-%if 0%{?with_python3}
-%files -n python3-pymongo-gridfs
+%files -n python2-bson
 %defattr(-,root,root,-)
-%doc LICENSE PKG-INFO README.rst doc
-%{python3_sitearch}/gridfs
-%endif # with_python3
-
-%files -n python-bson
-%defattr(-,root,root,-)
-%doc LICENSE PKG-INFO README.rst doc
+%license LICENSE
+%doc README.rst
 %{python2_sitearch}/bson
+
 
 %if 0%{?with_python3}
 %files -n python3-bson
 %defattr(-,root,root,-)
-%doc LICENSE PKG-INFO README.rst doc
+%license LICENSE
+%doc README.rst
 %{python3_sitearch}/bson
 %endif # with_python3
+
+
+%files -n python2-pymongo
+%defattr(-,root,root,-)
+%license LICENSE
+%doc README.rst
+%{python2_sitearch}/pymongo
+%{python2_sitearch}/pymongo-%{version}-*.egg-info
+
+
+%if 0%{?with_python3}
+%files -n python3-pymongo
+%defattr(-,root,root,-)
+%license LICENSE
+%doc README.rst
+%{python3_sitearch}/pymongo
+%{python3_sitearch}/pymongo-%{version}-*.egg-info
+%endif # with_python3
+
+
+%files -n python2-pymongo-gridfs
+%defattr(-,root,root,-)
+%license LICENSE
+%doc README.rst
+%{python2_sitearch}/gridfs
+
+
+%if 0%{?with_python3}
+%files -n python3-pymongo-gridfs
+%defattr(-,root,root,-)
+%license LICENSE
+%doc README.rst
+%{python3_sitearch}/gridfs
+%endif # with_python3
+
 
 %check
 %if 0%{?rhel} && 0%{?rhel} <= 6
@@ -261,13 +322,28 @@ exclude+='|^test_tz_aware$'
 exclude+='|^test_uri_options$'
 exclude+='|^test_use_greenlets$'
 exclude+='|^test_with_start_request$'
+exclude+='|^test_command_monitoring_spec$'
+exclude+='|^test_gridfs_spec$'
+exclude+='|^test_uri_spec$'
+exclude+='|^test_legacy_api$'
+exclude+='|^test_raw_bson$'
 exclude+=')'
 pushd test
 nosetests --exclude="$exclude"
 popd
 %endif
 
+
 %changelog
+* Tue Jan 19 2016 Randy Barlow <rbarlow@redhat.com> - 3.2-1
+- Update to 3.2.
+- Rename the python- subpackages with a python2- prefix.
+- Add a -doc subpackage with built html docs.
+- Skip a few new tests that use MongoDB.
+- Reorganize the spec file a bit.
+- Use the license macro.
+- Pull source from GitHub.
+
 * Mon Jan 18 2016 Randy Barlow <rbarlow@redhat.com> - 3.0.3-3
 - Do not use 2to3 for Python 3 (#1294130).
 

@@ -2,3 +2,6 @@
 /pymongo-2.5.tar.gz
 /pymongo-2.5.2.tar.gz
 /pymongo-3.0.3.tar.gz
+/0001-Serverless-test-suite-workaround.patch
+/0002-Use-ssl_match_hostname-from-backports.patch
+/3.2.tar.gz
