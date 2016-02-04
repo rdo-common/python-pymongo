@@ -1,13 +1,3 @@
-%if 0%{?fedora}
-%global with_python3 1
-%endif
-
-%if 0%{?rhel} && 0%{?rhel} <= 6
-%{!?__python2:        %global __python2 /usr/bin/python2}
-%{!?python2_sitelib:  %global python2_sitelib %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%{!?python2_sitearch: %global python2_sitearch %(%{__python2} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
-%endif
-
 # Fix private-shared-object-provides error
 %{?filter_setup:
 %filter_provides_in %{python_sitearch}.*\.so$
@@ -15,33 +5,27 @@
 }
 
 Name:           python-pymongo
-Version:        3.2
+Version:        3.2.1
 Release:        1%{?dist}
-Summary:        Python driver for MongoDB
 
-Group:          Development/Languages
+Summary:        Python driver for MongoDB
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
 URL:            http://api.mongodb.org/python
 Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version}.tar.gz
 Patch01:        0001-Serverless-test-suite-workaround.patch
-Patch02:        0002-Use-ssl_match_hostname-from-backports.patch
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+# This patch removes the bundled ssl.match_hostname library as it was vulnerable to CVE-2013-7440
+# and CVE-2013-2099, and wasn't needed anyway since Fedora >= 22 has the needed module in the Python
+# standard library. It also adjusts imports so that they exclusively use the code from Python.
+Patch02:        0002-Use-ssl.match_hostname-from-the-Python-stdlib.patch
 
-BuildRequires:  python2-devel
 BuildRequires:  python-nose
-BuildRequires:  python-setuptools
-%if 0%{?rhel} && 0%{?rhel} <= 6
-BuildRequires:  python-unittest2
-%endif
-BuildRequires:  python-backports-ssl_match_hostname
-
-%if 0%{?with_python3}
 BuildRequires:  python-tools
+BuildRequires:  python2-devel
+BuildRequires:  python2-setuptools
 BuildRequires:  python2-sphinx
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-%endif # if with_python3
 
 # Mongodb must run on a little-endian CPU (see bug #630898)
 ExcludeArch:    ppc ppc64 %{sparc} s390 s390x
@@ -61,7 +45,6 @@ Documentation for python-pymongo.
 
 %package -n python2-bson
 Summary:        Python bson library
-Group:          Development/Libraries
 %{?python_provide:%python_provide python2-bson}
 
 
@@ -71,10 +54,8 @@ to be lightweight, traversable, and efficient. BSON, like JSON, supports the
 embedding of objects and arrays within other objects and arrays.
 
 
-%if 0%{?with_python3}
 %package -n python3-bson
 Summary:        Python bson library
-Group:          Development/Libraries
 %{?python_provide:%python_provide python3-bson}
 
 
@@ -83,15 +64,12 @@ BSON is a binary-encoded serialization of JSON-like documents. BSON is designed
 to be lightweight, traversable, and efficient. BSON, like JSON, supports the
 embedding of objects and arrays within other objects and arrays.  This package
 contains the python3 version of this module.
-%endif # with_python3
 
 
 %package -n python2-pymongo
 Summary:        Python driver for MongoDB
-Group:          Development/Languages
-Requires:       python-backports-ssl_match_hostname
-Requires:       python2-bson = %{version}-%{release}
 
+Requires:       python2-bson = %{version}-%{release}
 Provides:       pymongo = %{version}-%{release}
 Obsoletes:      pymongo <= 2.1.1-4
 %{?python_provide:%python_provide python2-pymongo}
@@ -102,10 +80,8 @@ The Python driver for MongoDB.  This package contains the python2 version of
 this module.
 
 
-%if 0%{?with_python3}
 %package -n python3-pymongo
 Summary:        Python driver for MongoDB
-Group:          Development/Languages
 Requires:       python3-bson = %{version}-%{release}
 %{?python_provide:%python_provide python3-pymongo}
 
@@ -113,12 +89,10 @@ Requires:       python3-bson = %{version}-%{release}
 %description -n python3-pymongo
 The Python driver for MongoDB.  This package contains the python3 version of
 this module.
-%endif # with_python3
 
 
 %package -n python2-pymongo-gridfs
 Summary:        Python GridFS driver for MongoDB
-Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 Provides:       pymongo-gridfs = %{version}-%{release}
 Obsoletes:      pymongo-gridfs <= 2.1.1-4
@@ -129,10 +103,8 @@ Obsoletes:      pymongo-gridfs <= 2.1.1-4
 GridFS is a storage specification for large objects in MongoDB.
 
 
-%if 0%{?with_python3}
 %package -n python3-pymongo-gridfs
 Summary:        Python GridFS driver for MongoDB
-Group:          Development/Libraries
 Requires:       python3-pymongo%{?_isa} = %{version}-%{release}
 %{?python_provide:%python_provide python3-pymongo-gridfs}
 
@@ -140,30 +112,23 @@ Requires:       python3-pymongo%{?_isa} = %{version}-%{release}
 %description -n python3-pymongo-gridfs
 GridFS is a storage specification for large objects in MongoDB.  This package
 contains the python3 version of this module.
-%endif # with_python3
 
 
 %prep
 %setup -q -n mongo-python-driver-%{version}
 %patch01 -p1 -b .test
 %patch02 -p1 -b .ssl
-# remove bundled ssl.mast_hostname code
-rm pymongo/ssl_match_hostname.py
 
-%if 0%{?with_python3}
 rm -rf %{py3dir}
 cp -a . %{py3dir}
-%endif # with_python3
 
 
 %build
 CFLAGS="%{optflags}" %{__python2} setup.py build
 
-%if 0%{?with_python3}
 pushd %{py3dir}
 CFLAGS="%{optflags}" %{__python3} setup.py build
 popd
-%endif # with_python3
 
 pushd doc
 make html
@@ -177,18 +142,12 @@ rm -rf %{buildroot}
 chmod 755 %{buildroot}%{python2_sitearch}/bson/*.so
 chmod 755 %{buildroot}%{python2_sitearch}/pymongo/*.so
 
-%if 0%{?with_python3}
 pushd %{py3dir}
 %{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT
 # Fix permissions
 chmod 755 %{buildroot}%{python3_sitearch}/bson/*.so
 chmod 755 %{buildroot}%{python3_sitearch}/pymongo/*.so
 popd
-%endif # with_python3
-
-
-%clean
-rm -rf %{buildroot}
 
 
 %files doc
@@ -197,59 +156,44 @@ rm -rf %{buildroot}
 
 
 %files -n python2-bson
-%defattr(-,root,root,-)
 %license LICENSE
 %doc README.rst
 %{python2_sitearch}/bson
 
 
-%if 0%{?with_python3}
 %files -n python3-bson
-%defattr(-,root,root,-)
 %license LICENSE
 %doc README.rst
 %{python3_sitearch}/bson
-%endif # with_python3
 
 
 %files -n python2-pymongo
-%defattr(-,root,root,-)
 %license LICENSE
 %doc README.rst
 %{python2_sitearch}/pymongo
 %{python2_sitearch}/pymongo-%{version}-*.egg-info
 
 
-%if 0%{?with_python3}
 %files -n python3-pymongo
-%defattr(-,root,root,-)
 %license LICENSE
 %doc README.rst
 %{python3_sitearch}/pymongo
 %{python3_sitearch}/pymongo-%{version}-*.egg-info
-%endif # with_python3
 
 
 %files -n python2-pymongo-gridfs
-%defattr(-,root,root,-)
 %license LICENSE
 %doc README.rst
 %{python2_sitearch}/gridfs
 
 
-%if 0%{?with_python3}
 %files -n python3-pymongo-gridfs
-%defattr(-,root,root,-)
 %license LICENSE
 %doc README.rst
 %{python3_sitearch}/gridfs
-%endif # with_python3
 
 
 %check
-%if 0%{?rhel} && 0%{?rhel} <= 6
-# do not run test under EL6
-%else
 # Exclude tests that require an active MongoDB connection
  exclude='(^test_auth_from_uri$'
 exclude+='|^test_auto_auth_login$'
@@ -331,10 +275,16 @@ exclude+=')'
 pushd test
 nosetests --exclude="$exclude"
 popd
-%endif
 
 
 %changelog
+* Wed Feb 03 2016 Randy Barlow <rbarlow@redhat.com> - 3.2.1-1
+- Remove use of needless defattr macros (#1303426).
+- Update to 3.2.1 (#1304137).
+- Remove lots of if statements as this spec file will only be used on Rawhide.
+- Remove dependency on python-backports-ssl_match_hostname as it is not needed in Fedora.
+- Rework the patch for CVE-2013-7440 and CVE-2013-2099 so that it exclusively uses code from Python.
+
 * Tue Jan 19 2016 Randy Barlow <rbarlow@redhat.com> - 3.2-1
 - Update to 3.2.
 - Rename the python- subpackages with a python2- prefix.
