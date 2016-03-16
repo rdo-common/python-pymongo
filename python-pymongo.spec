@@ -5,12 +5,12 @@
 }
 
 Name:           python-pymongo
-Version:        3.2.1
+Version:        3.2.2
 Release:        1%{?dist}
 
-Summary:        Python driver for MongoDB
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
+Summary:        Python driver for MongoDB
 URL:            http://api.mongodb.org/python
 Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version}.tar.gz
 Patch01:        0001-Serverless-test-suite-workaround.patch
@@ -278,6 +278,9 @@ popd
 
 
 %changelog
+* Tue Mar 15 2016 Randy Barlow <rbarlow@redhat.com> - 3.2.2-1
+- Update to 3.2.2 (#1318073).
+
 * Wed Feb 03 2016 Randy Barlow <rbarlow@redhat.com> - 3.2.1-1
 - Remove use of needless defattr macros (#1303426).
 - Update to 3.2.1 (#1304137).
