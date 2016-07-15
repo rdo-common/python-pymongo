@@ -1,8 +1,13 @@
-From ceb275ef3c63d4324e05539242283de083bd08d6 Mon Sep 17 00:00:00 2001
-From: Randy Barlow <randy@electronsweatshop.com>
-Date: Wed, 3 Feb 2016 22:10:28 -0500
+From e6adec8cae7c4a7840fb012c6479856caaf18aba Mon Sep 17 00:00:00 2001
+From: Randy Barlow <bowlofeggs@electronsweatshop.com>
+Date: Fri, 15 Jul 2016 10:12:16 -0400
 Subject: [PATCH] Use ssl.match_hostname from the Python stdlib.
 
+This patch removes the bundled ssl.match_hostname library as it was
+vulnerable to CVE-2013-7440 and CVE-2013-2099, and wasn't needed
+anyway since Fedora >= 22 has the needed module in the Python
+standard library. It also adjusts imports so that they exclusively
+use the code from Python.
 ---
  pymongo/errors.py             |   5 +--
  pymongo/pool.py               |   6 +--
@@ -11,7 +16,7 @@ Subject: [PATCH] Use ssl.match_hostname from the Python stdlib.
  delete mode 100644 pymongo/ssl_match_hostname.py
 
 diff --git a/pymongo/errors.py b/pymongo/errors.py
-index fe7b71a..0ba6006 100644
+index fb4c9e4..e8e6350 100644
 --- a/pymongo/errors.py
 +++ b/pymongo/errors.py
 @@ -16,10 +16,7 @@
@@ -27,12 +32,12 @@ index fe7b71a..0ba6006 100644
  
  class PyMongoError(Exception):
 diff --git a/pymongo/pool.py b/pymongo/pool.py
-index 904c6b1..5fe663c 100644
+index 6e9cc75..41bef83 100644
 --- a/pymongo/pool.py
 +++ b/pymongo/pool.py
 @@ -44,11 +44,7 @@ from pymongo.server_type import SERVER_TYPE
  # main thread, to avoid the deadlock. See PYTHON-607.
- u('foo').encode('idna')
+ u'foo'.encode('idna')
  
 -try:
 -    from ssl import match_hostname, CertificateError
@@ -150,5 +155,5 @@ index f74df15..0000000
 -        raise CertificateError("no appropriate commonName or "
 -            "subjectAltName fields were found")
 -- 
-2.7.0
+2.9.0
 

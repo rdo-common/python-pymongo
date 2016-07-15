@@ -5,7 +5,7 @@
 }
 
 Name:           python-pymongo
-Version:        3.2.2
+Version:        3.3.0
 Release:        1%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
@@ -27,16 +27,14 @@ BuildRequires:  python2-sphinx
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 
-# Mongodb must run on a little-endian CPU (see bug #630898)
-ExcludeArch:    ppc ppc64 %{sparc} s390 s390x
-
 
 %description
 The Python driver for MongoDB.
 
 
 %package doc
-Summary: Documentation for python-pymongo
+BuildArch: noarch
+Summary:   Documentation for python-pymongo
 
 
 %description doc
@@ -93,7 +91,7 @@ this module.
 
 %package -n python2-pymongo-gridfs
 Summary:        Python GridFS driver for MongoDB
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       python2-pymongo%{?_isa} = %{version}-%{release}
 Provides:       pymongo-gridfs = %{version}-%{release}
 Obsoletes:      pymongo-gridfs <= 2.1.1-4
 %{?python_provide:%python_provide python2-pymongo-gridfs}
@@ -124,19 +122,18 @@ cp -a . %{py3dir}
 
 
 %build
-CFLAGS="%{optflags}" %{__python2} setup.py build
+%py2_build
 
 pushd %{py3dir}
-CFLAGS="%{optflags}" %{__python3} setup.py build
+%py3_build
 popd
 
 pushd doc
-make html
+make %{?_smp_mflags} html
 popd
 
 
 %install
-rm -rf %{buildroot}
 %{__python2} setup.py install --skip-build --root $RPM_BUILD_ROOT
 # Fix permissions
 chmod 755 %{buildroot}%{python2_sitearch}/bson/*.so
@@ -270,6 +267,7 @@ exclude+='|^test_command_monitoring_spec$'
 exclude+='|^test_gridfs_spec$'
 exclude+='|^test_uri_spec$'
 exclude+='|^test_legacy_api$'
+exclude+='|^test_sdam_monitoring_spec$'
 exclude+='|^test_raw_bson$'
 exclude+=')'
 pushd test
@@ -278,6 +276,15 @@ popd
 
 
 %changelog
+* Fri Jul 15 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.3.0-1
+- Update to 3.3.0 (#1356334).
+- Remove the exclude arch on big endian systems, since 3.3.0 now supports them.
+- Use the newer Python build macros.
+- Add a skip test on another test that requires a running mongod.
+- Convert the -doc subpackage into a noarch, as it should be.
+- python2-pymongo-gridfs now requires python2-pymongo(isa) instead of python-pymongo(isa).
+- Build the docs in parallel.
+
 * Tue Mar 15 2016 Randy Barlow <rbarlow@redhat.com> - 3.2.2-1
 - Update to 3.2.2 (#1318073).
 
