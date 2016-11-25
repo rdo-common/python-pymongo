@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.3.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -19,6 +19,12 @@ Patch01:        0001-Serverless-test-suite-workaround.patch
 # standard library. It also adjusts imports so that they exclusively use the code from Python.
 Patch02:        0002-Use-ssl.match_hostname-from-the-Python-stdlib.patch
 
+%ifnarch armv7hl ppc64
+# These are needed for tests, and the tests don't work on armv7hl or ppc64.
+BuildRequires:  mongodb-server
+BuildRequires:  net-tools
+BuildRequires:  procps-ng
+%endif
 BuildRequires:  python-nose
 BuildRequires:  python-tools
 BuildRequires:  python2-devel
@@ -191,91 +197,38 @@ popd
 
 
 %check
-# Exclude tests that require an active MongoDB connection
- exclude='(^test_auth_from_uri$'
-exclude+='|^test_auto_auth_login$'
-exclude+='|^test_auto_reconnect_exception_when_read_preference_is_secondary$'
-exclude+='|^test_auto_start_request$'
-exclude+='|^test_binary$'
-exclude+='|^test_client$'
-exclude+='|^test_collection$'
-exclude+='|^test_common$'
-exclude+='|^test_config_ssl$'
-exclude+='|^test_connect$'
-exclude+='|^test_connection$'
-exclude+='|^test_constants$'
-exclude+='|^test_contextlib$'
-exclude+='|^test_copy_db$'
-exclude+='|^test_cursor$'
+# For some reason, the tests never think they can connect to mongod on armv7hl even though netstat
+# says it's listening. mongod is not available on ppc64.
+%ifnarch armv7hl ppc64
+mkdir ./mongod
+mongod --fork --dbpath ./mongod --logpath ./mongod/mongod.log
+# Give MongoDB some time to settle
+while [ "$(netstat -ln | grep 27017)" == "" ]
+do
+    sleep 1
+done
+
+# Some of pymongo's tests are not compatible with the current nose test suite in Rawhide/F25.
+# This is reported upstream at https://jira.mongodb.org/browse/PYTHON-1194
+ exclude='(^test_command_monitoring_spec$'
 exclude+='|^test_crud$'
-exclude+='|^test_database$'
-exclude+='|^test_database_names$'
-exclude+='|^test_delegated_auth$'
-exclude+='|^test_disconnect$'
 exclude+='|^test_discovery_and_monitoring$'
-exclude+='|^test_document_class$'
-exclude+='|^test_drop_database$'
-exclude+='|^test_equality$'
-exclude+='|^test_fork$'
-exclude+='|^test_from_uri$'
-exclude+='|^test_fsync_lock_unlock$'
-exclude+='|^test_get_db$'
-exclude+='|^test_getters$'
-exclude+='|^test_grid_file$'
-exclude+='|^test_gridfs$'
-exclude+='|^test_host_w_port$'
-exclude+='|^test_interrupt_signal$'
-exclude+='|^test_ipv6$'
-exclude+='|^test_iteration$'
-exclude+='|^test_json_util$'
-exclude+='|^test_kill_cursor_explicit_primary$'
-exclude+='|^test_kill_cursor_explicit_secondary$'
-exclude+='|^test_master_slave_connection$'
-exclude+='|^test_nested_request$'
-exclude+='|^test_network_timeout$'
-exclude+='|^test_network_timeout_validation$'
-exclude+='|^test_operation_failure_with_request$'
-exclude+='|^test_operation_failure_without_request$'
-exclude+='|^test_operations$'
-exclude+='|^test_pinned_member$'
-exclude+='|^test_pooling$'
-exclude+='|^test_pooling_gevent$'
-exclude+='|^test_properties$'
-exclude+='|^test_pymongo$'
-exclude+='|^test_read_preferences$'
-exclude+='|^test_replica_set_client$'
-exclude+='|^test_replica_set_connection$'
-exclude+='|^test_replica_set_connection_alias$'
-exclude+='|^test_repr$'
-exclude+='|^test_request_threads$'
-exclude+='|^test_safe_insert$'
-exclude+='|^test_safe_update$'
-exclude+='|^test_schedule_refresh$'
-exclude+='|^test_server_disconnect$'
+exclude+='|^test_gridfs_spec$'
+exclude+='|^test_sdam_monitoring_spec$'
 exclude+='|^test_server_selection$'
 exclude+='|^test_server_selection_rtt$'
-exclude+='|^test_son_manipulator$'
-exclude+='|^test_threading$'
-exclude+='|^test_threads$'
-exclude+='|^test_threads_replica_set_connection$'
-exclude+='|^test_timeouts$'
-exclude+='|^test_tz_aware$'
-exclude+='|^test_uri_options$'
-exclude+='|^test_use_greenlets$'
-exclude+='|^test_with_start_request$'
-exclude+='|^test_command_monitoring_spec$'
-exclude+='|^test_gridfs_spec$'
 exclude+='|^test_uri_spec$'
-exclude+='|^test_legacy_api$'
-exclude+='|^test_sdam_monitoring_spec$'
-exclude+='|^test_raw_bson$'
 exclude+=')'
-pushd test
-nosetests --exclude="$exclude"
-popd
+python setup.py nosetests --exclude="$exclude" || (pkill mongod && exit 1)
+
+pkill mongod
+%endif
 
 
 %changelog
+* Fri Nov 25 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.3.0-3
+- Run the tests against a live mongod.
+
 * Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.3.0-2
 - https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
 
