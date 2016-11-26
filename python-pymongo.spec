@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.3.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -200,6 +200,12 @@ popd
 # For some reason, the tests never think they can connect to mongod on armv7hl even though netstat
 # says it's listening. mongod is not available on ppc64.
 %ifnarch armv7hl ppc64
+
+if [ "$(netstat -ln | grep 27017)" != "" ]
+then
+    pkill mongod
+fi
+
 mkdir ./mongod
 mongod --fork --dbpath ./mongod --logpath ./mongod/mongod.log
 # Give MongoDB some time to settle
@@ -208,24 +214,16 @@ do
     sleep 1
 done
 
-# Some of pymongo's tests are not compatible with the current nose test suite in Rawhide/F25.
-# This is reported upstream at https://jira.mongodb.org/browse/PYTHON-1194
- exclude='(^test_command_monitoring_spec$'
-exclude+='|^test_crud$'
-exclude+='|^test_discovery_and_monitoring$'
-exclude+='|^test_gridfs_spec$'
-exclude+='|^test_sdam_monitoring_spec$'
-exclude+='|^test_server_selection$'
-exclude+='|^test_server_selection_rtt$'
-exclude+='|^test_uri_spec$'
-exclude+=')'
-python setup.py nosetests --exclude="$exclude" || (pkill mongod && exit 1)
+python setup.py test || (pkill mongod && exit 1)
 
 pkill mongod
 %endif
 
 
 %changelog
+* Fri Nov 25 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.3.0-4
+- Run the tests with setup.py test instead of with nosetests.
+
 * Fri Nov 25 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.3.0-3
 - Run the tests against a live mongod.
 
