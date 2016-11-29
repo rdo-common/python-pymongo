@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.3.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -19,8 +19,9 @@ Patch01:        0001-Serverless-test-suite-workaround.patch
 # standard library. It also adjusts imports so that they exclusively use the code from Python.
 Patch02:        0002-Use-ssl.match_hostname-from-the-Python-stdlib.patch
 
-%ifnarch armv7hl ppc64
-# These are needed for tests, and the tests don't work on armv7hl or ppc64.
+%ifnarch armv7hl ppc64 s390 s390x
+# These are needed for tests, and the tests don't work on armv7hl.
+# MongoDB server is not available on big endian arches (ppc64, s390(x)).
 BuildRequires:  mongodb-server
 BuildRequires:  net-tools
 BuildRequires:  procps-ng
@@ -198,8 +199,8 @@ popd
 
 %check
 # For some reason, the tests never think they can connect to mongod on armv7hl even though netstat
-# says it's listening. mongod is not available on ppc64.
-%ifnarch armv7hl ppc64
+# says it's listening. mongod is not available on big endian arches (ppc64, s390(x)).
+%ifnarch armv7hl ppc64 s390 s390x
 
 if [ "$(netstat -ln | grep 27017)" != "" ]
 then
@@ -221,6 +222,9 @@ pkill mongod
 
 
 %changelog
+* Tue Nov 29 2016 Dan Horák <dan[at]danny.cz> - 3.3.0-5
+- Update test BRs
+
 * Fri Nov 25 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.3.0-4
 - Run the tests with setup.py test instead of with nosetests.
 
