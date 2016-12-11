@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.3.0
-Release:        5%{?dist}
+Release:        6%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -222,6 +222,9 @@ pkill mongod
 
 
 %changelog
+* Fri Dec 09 2016 Charalampos Stratakis <cstratak@redhat.com> - 3.3.0-6
+- Rebuild for Python 3.6
+
 * Tue Nov 29 2016 Dan Horák <dan[at]danny.cz> - 3.3.0-5
 - Update test BRs
 
