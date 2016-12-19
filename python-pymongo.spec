@@ -5,19 +5,18 @@
 }
 
 Name:           python-pymongo
-Version:        3.3.0
-Release:        6%{?dist}
+Version:        3.4.0
+Release:        1%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
 Summary:        Python driver for MongoDB
 URL:            http://api.mongodb.org/python
 Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version}.tar.gz
-Patch01:        0001-Serverless-test-suite-workaround.patch
 # This patch removes the bundled ssl.match_hostname library as it was vulnerable to CVE-2013-7440
 # and CVE-2013-2099, and wasn't needed anyway since Fedora >= 22 has the needed module in the Python
 # standard library. It also adjusts imports so that they exclusively use the code from Python.
-Patch02:        0002-Use-ssl.match_hostname-from-the-Python-stdlib.patch
+Patch01:        0001-Use-ssl.match_hostname-from-the-Python-stdlib.patch
 
 %ifnarch armv7hl ppc64 s390 s390x
 # These are needed for tests, and the tests don't work on armv7hl.
@@ -26,7 +25,6 @@ BuildRequires:  mongodb-server
 BuildRequires:  net-tools
 BuildRequires:  procps-ng
 %endif
-BuildRequires:  python-nose
 BuildRequires:  python-tools
 BuildRequires:  python2-devel
 BuildRequires:  python2-setuptools
@@ -74,7 +72,7 @@ contains the python3 version of this module.
 %package -n python2-pymongo
 Summary:        Python driver for MongoDB
 
-Requires:       python2-bson = %{version}-%{release}
+Requires:       python2-bson%{?_isa} = %{version}-%{release}
 Provides:       pymongo = %{version}-%{release}
 Obsoletes:      pymongo <= 2.1.1-4
 %{?python_provide:%python_provide python2-pymongo}
@@ -87,7 +85,7 @@ this module.
 
 %package -n python3-pymongo
 Summary:        Python driver for MongoDB
-Requires:       python3-bson = %{version}-%{release}
+Requires:       python3-bson%{?_isa} = %{version}-%{release}
 %{?python_provide:%python_provide python3-pymongo}
 
 
@@ -121,8 +119,12 @@ contains the python3 version of this module.
 
 %prep
 %setup -q -n mongo-python-driver-%{version}
-%patch01 -p1 -b .test
-%patch02 -p1 -b .ssl
+%patch01 -p1 -b .ssl
+
+# Remove the bundled ssl.match_hostname library as it was vulnerable to CVE-2013-7440
+# and CVE-2013-2099, and isn't needed anyway since Fedora >= 22 has the needed module in the Python
+# standard library.
+rm pymongo/ssl_match_hostname.py
 
 rm -rf %{py3dir}
 cp -a . %{py3dir}
@@ -141,13 +143,13 @@ popd
 
 
 %install
-%{__python2} setup.py install --skip-build --root $RPM_BUILD_ROOT
+%py2_install
 # Fix permissions
 chmod 755 %{buildroot}%{python2_sitearch}/bson/*.so
 chmod 755 %{buildroot}%{python2_sitearch}/pymongo/*.so
 
 pushd %{py3dir}
-%{__python3} setup.py install --skip-build --root $RPM_BUILD_ROOT
+%py3_install
 # Fix permissions
 chmod 755 %{buildroot}%{python3_sitearch}/bson/*.so
 chmod 755 %{buildroot}%{python3_sitearch}/pymongo/*.so
@@ -222,6 +224,12 @@ pkill mongod
 
 
 %changelog
+* Sun Dec 18 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.4.0-1
+- Update to 3.4.0 (#1400227).
+- Use new install macros.
+- Drop unneeded BuildRequires on python-nose.
+- pymongo now requires bson by arch as it should.
+
 * Fri Dec 09 2016 Charalampos Stratakis <cstratak@redhat.com> - 3.3.0-6
 - Rebuild for Python 3.6
 
