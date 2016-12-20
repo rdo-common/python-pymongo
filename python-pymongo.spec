@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.4.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -224,6 +224,9 @@ pkill mongod
 
 
 %changelog
+* Tue Dec 20 2016 Miro Hrončok <mhroncok@redhat.com> - 3.4.0-2
+- Rebuild for Python 3.6
+
 * Sun Dec 18 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.4.0-1
 - Update to 3.4.0 (#1400227).
 - Use new install macros.
