@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.4.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -217,13 +217,20 @@ do
     sleep 1
 done
 
-python setup.py test || (pkill mongod && exit 1)
+python2 setup.py test || (pkill mongod && exit 1)
+
+pushd %{py3dir}
+python3 setup.py test || (pkill mongod && exit 1)
+popd
 
 pkill mongod
 %endif
 
 
 %changelog
+* Sun Dec 18 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.4.0-3
+- Run the test suite in the check section (#1409251).
+
 * Tue Dec 20 2016 Miro Hrončok <mhroncok@redhat.com> - 3.4.0-2
 - Rebuild for Python 3.6
 
