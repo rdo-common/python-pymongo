@@ -228,7 +228,7 @@ pkill mongod
 
 
 %changelog
-* Sun Dec 18 2016 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.4.0-3
+* Fri Jan 06 2017 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.4.0-3
 - Run the test suite in the check section (#1409251).
 
 * Tue Dec 20 2016 Miro Hrončok <mhroncok@redhat.com> - 3.4.0-2
