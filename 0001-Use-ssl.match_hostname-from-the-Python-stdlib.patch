@@ -1,42 +1,9 @@
-From 2ceb8396c6bb3c5ef486a971f2a091f8d702fc15 Mon Sep 17 00:00:00 2001
-From: Randy Barlow <randy@electronsweatshop.com>
-Date: Sun, 18 Dec 2016 17:37:39 -0500
-Subject: [PATCH] Use ssl_match_hostname from Python's stdlib.
-
-The patch removes the usage of the bundled ssl.match_hostname library as it was
-vulnerable to CVE-2013-7440 and CVE-2013-2099, and wasn't needed
-anyway since Fedora >= 22 has the needed module in the Python
-standard library. It adjusts imports so that they exclusively
-use the code from Python.
-
-Fixes CVE-2013-2099 and CVE-2013-7440.
----
- pymongo/errors.py | 5 +----
- pymongo/pool.py   | 3 +--
- 2 files changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/pymongo/errors.py b/pymongo/errors.py
-index fb4c9e48..e8e6350b 100644
---- a/pymongo/errors.py
-+++ b/pymongo/errors.py
-@@ -16,10 +16,7 @@
- 
- from bson.errors import *
- 
--try:
--    from ssl import CertificateError
--except ImportError:
--    from pymongo.ssl_match_hostname import CertificateError
-+from ssl import CertificateError
- 
- 
- class PyMongoError(Exception):
 diff --git a/pymongo/pool.py b/pymongo/pool.py
-index d6c5b773..5ca82c2d 100644
+index 859d0e0..f55fd8e 100644
 --- a/pymongo/pool.py
 +++ b/pymongo/pool.py
 @@ -49,8 +49,7 @@ from pymongo.network import (command,
- from pymongo.read_concern import DEFAULT_READ_CONCERN
+                              SocketChecker)
  from pymongo.read_preferences import ReadPreference
  from pymongo.server_type import SERVER_TYPE
 -# Always use our backport so we always have support for IP address matching
@@ -45,6 +12,3 @@ index d6c5b773..5ca82c2d 100644
  
  # For SNI support. According to RFC6066, section 3, IPv4 and IPv6 literals are
  # not permitted for SNI hostname.
--- 
-2.11.0
-
