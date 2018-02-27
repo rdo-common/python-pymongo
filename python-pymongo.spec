@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.6.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -25,7 +25,7 @@ BuildRequires:  mongodb-server
 BuildRequires:  net-tools
 BuildRequires:  procps-ng
 %endif
-BuildRequires:  python-tools
+BuildRequires:  python2-tools
 BuildRequires:  python2-devel
 BuildRequires:  python2-setuptools
 BuildRequires:  python2-sphinx
@@ -228,6 +228,10 @@ pkill mongod
 
 
 %changelog
+* Tue Feb 27 2018 Iryna Shcherbina <ishcherb@redhat.com> - 3.6.0-2
+- Update Python 2 dependency declarations to new packaging standards
+  (See https://fedoraproject.org/wiki/FinalizingFedoraSwitchtoPython3)
+
 * Mon Feb 19 2018 Marek Skalický <mskalick@redhat.com> - 3.6.0-1
 - Rebase to latest release
 
