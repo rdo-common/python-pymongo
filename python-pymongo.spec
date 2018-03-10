@@ -5,14 +5,14 @@
 }
 
 Name:           python-pymongo
-Version:        3.6.0
-Release:        2%{?dist}
+Version:        3.6.1
+Release:        1%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
 Summary:        Python driver for MongoDB
 URL:            http://api.mongodb.org/python
-Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version}.tar.gz
+Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version}/pymongo-%{version}.tar.gz
 # This patch removes the bundled ssl.match_hostname library as it was vulnerable to CVE-2013-7440
 # and CVE-2013-2099, and wasn't needed anyway since Fedora >= 22 has the needed module in the Python
 # standard library. It also adjusts imports so that they exclusively use the code from Python.
@@ -156,6 +156,34 @@ chmod 755 %{buildroot}%{python3_sitearch}/pymongo/*.so
 popd
 
 
+%check
+# For some reason, the tests never think they can connect to mongod on armv7hl even though netstat
+# says it's listening. mongod is not available on big endian arches (ppc64, s390(x)).
+%ifnarch armv7hl ppc64 s390 s390x
+
+if [ "$(netstat -ln | grep 27017)" != "" ]
+then
+    pkill mongod
+fi
+
+mkdir ./mongod
+mongod --fork --dbpath ./mongod --logpath ./mongod/mongod.log
+# Give MongoDB some time to settle
+while [ "$(netstat -ln | grep 27017)" == "" ]
+do
+    sleep 1
+done
+
+python2 setup.py test || (pkill mongod && exit 1)
+
+pushd %{py3dir}
+python3 setup.py test || (pkill mongod && exit 1)
+popd
+
+pkill mongod
+%endif
+
+
 %files doc
 %license LICENSE
 %doc doc/_build/html/*
@@ -199,35 +227,11 @@ popd
 %{python3_sitearch}/gridfs
 
 
-%check
-# For some reason, the tests never think they can connect to mongod on armv7hl even though netstat
-# says it's listening. mongod is not available on big endian arches (ppc64, s390(x)).
-%ifnarch armv7hl ppc64 s390 s390x
-
-if [ "$(netstat -ln | grep 27017)" != "" ]
-then
-    pkill mongod
-fi
-
-mkdir ./mongod
-mongod --fork --dbpath ./mongod --logpath ./mongod/mongod.log
-# Give MongoDB some time to settle
-while [ "$(netstat -ln | grep 27017)" == "" ]
-do
-    sleep 1
-done
-
-python2 setup.py test || (pkill mongod && exit 1)
-
-pushd %{py3dir}
-python3 setup.py test || (pkill mongod && exit 1)
-popd
-
-pkill mongod
-%endif
-
-
 %changelog
+* Sat Mar 10 2018 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.6.1-1
+- Update to 3.6.1 (#1550757).
+- http://api.mongodb.com/python/3.6.1/changelog.html
+
 * Tue Feb 27 2018 Iryna Shcherbina <ishcherb@redhat.com> - 3.6.0-2
 - Update Python 2 dependency declarations to new packaging standards
   (See https://fedoraproject.org/wiki/FinalizingFedoraSwitchtoPython3)
