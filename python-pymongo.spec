@@ -18,6 +18,7 @@ Source0:        https://github.com/mongodb/mongo-python-driver/archive/%{version
 # standard library. It also adjusts imports so that they exclusively use the code from Python.
 Patch01:        0001-Use-ssl.match_hostname-from-the-Python-stdlib.patch
 
+BuildRequires:  gcc
 %ifnarch armv7hl ppc64 s390 s390x
 # These are needed for tests, and the tests don't work on armv7hl.
 # MongoDB server is not available on big endian arches (ppc64, s390(x)).
