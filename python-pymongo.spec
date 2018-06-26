@@ -162,7 +162,7 @@ popd
 # says it's listening. mongod is not available on big endian arches (ppc64, s390(x)).
 %ifnarch armv7hl ppc64 s390 s390x
 
-if [ "$(netstat -ln | grep 27017)" != "" ]
+if [ "$(netstat -ln | grep :27017)" != "" ]
 then
     pkill mongod
 fi
@@ -170,7 +170,7 @@ fi
 mkdir ./mongod
 mongod --fork --dbpath ./mongod --logpath ./mongod/mongod.log
 # Give MongoDB some time to settle
-while [ "$(netstat -ln | grep 27017)" == "" ]
+while [ "$(netstat -ln | grep :27017)" == "" ]
 do
     sleep 1
 done
