@@ -5,8 +5,8 @@
 }
 
 Name:           python-pymongo
-Version:        3.6.1
-Release:        3%{?dist}
+Version:        3.7.1
+Release:        1%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -229,6 +229,10 @@ pkill mongod
 
 
 %changelog
+* Mon Jul 30 2018 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.7.1-1
+- Update to 3.7.1 (#1601651).
+- http://api.mongodb.com/python/3.7.1/changelog.html
+
 * Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
