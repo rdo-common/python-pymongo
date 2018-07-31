@@ -6,7 +6,7 @@
 
 Name:           python-pymongo
 Version:        3.7.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -229,6 +229,9 @@ pkill mongod
 
 
 %changelog
+* Tue Jul 31 2018 Florian Weimer <fweimer@redhat.com> - 3.7.1-2
+- Rebuild with fixed binutils
+
 * Mon Jul 30 2018 Randy Barlow <bowlofeggs@fedoraproject.org> - 3.7.1-1
 - Update to 3.7.1 (#1601651).
 - http://api.mongodb.com/python/3.7.1/changelog.html
