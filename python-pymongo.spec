@@ -1,15 +1,8 @@
-# Fix private-shared-object-provides error
-%{?filter_setup:
-%filter_provides_in %{python_sitearch}.*\.so$
-%filter_setup
-}
-
 %global bootstrap 0
-%bcond_without python2
 
 Name:           python-pymongo
 Version:        3.7.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 
 # All code is ASL 2.0 except bson/time64*.{c,h} which is MIT
 License:        ASL 2.0 and MIT
@@ -33,13 +26,8 @@ BuildRequires:  net-tools
 BuildRequires:  procps-ng
 %endif
 BuildRequires:  python3-tools
-%if %{with python2}
-BuildRequires:  python2-devel
-BuildRequires:  python2-setuptools
-%endif
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-
 
 %description
 The Python driver for MongoDB.
@@ -49,28 +37,13 @@ The Python driver for MongoDB.
 BuildArch: noarch
 Summary:   Documentation for python-pymongo
 
-
 %description doc
 Documentation for python-pymongo.
-
-
-%if %{with python2}
-%package -n python2-bson
-Summary:        Python bson library
-%{?python_provide:%python_provide python2-bson}
-
-
-%description -n python2-bson
-BSON is a binary-encoded serialization of JSON-like documents. BSON is designed
-to be lightweight, traversable, and efficient. BSON, like JSON, supports the
-embedding of objects and arrays within other objects and arrays.
-%endif
 
 
 %package -n python3-bson
 Summary:        Python bson library
 %{?python_provide:%python_provide python3-bson}
-
 
 %description -n python3-bson
 BSON is a binary-encoded serialization of JSON-like documents. BSON is designed
@@ -79,52 +52,20 @@ embedding of objects and arrays within other objects and arrays.  This package
 contains the python3 version of this module.
 
 
-%if %{with python2}
-%package -n python2-pymongo
-Summary:        Python driver for MongoDB
-
-Requires:       python2-bson%{?_isa} = %{version}-%{release}
-Provides:       pymongo = %{version}-%{release}
-Obsoletes:      pymongo <= 2.1.1-4
-%{?python_provide:%python_provide python2-pymongo}
-
-
-%description -n python2-pymongo
-The Python driver for MongoDB.  This package contains the python2 version of
-this module.
-%endif
-
-
 %package -n python3-pymongo
 Summary:        Python driver for MongoDB
 Requires:       python3-bson%{?_isa} = %{version}-%{release}
 %{?python_provide:%python_provide python3-pymongo}
-
 
 %description -n python3-pymongo
 The Python driver for MongoDB.  This package contains the python3 version of
 this module.
 
 
-%if %{with python2}
-%package -n python2-pymongo-gridfs
-Summary:        Python GridFS driver for MongoDB
-Requires:       python2-pymongo%{?_isa} = %{version}-%{release}
-Provides:       pymongo-gridfs = %{version}-%{release}
-Obsoletes:      pymongo-gridfs <= 2.1.1-4
-%{?python_provide:%python_provide python2-pymongo-gridfs}
-
-
-%description -n python2-pymongo-gridfs
-GridFS is a storage specification for large objects in MongoDB.
-%endif
-
-
 %package -n python3-pymongo-gridfs
 Summary:        Python GridFS driver for MongoDB
 Requires:       python3-pymongo%{?_isa} = %{version}-%{release}
 %{?python_provide:%python_provide python3-pymongo-gridfs}
-
 
 %description -n python3-pymongo-gridfs
 GridFS is a storage specification for large objects in MongoDB.  This package
@@ -140,24 +81,9 @@ contains the python3 version of this module.
 # standard library.
 rm pymongo/ssl_match_hostname.py
 
-%if %{with python2}
-rm -rf %{py3dir}
-cp -a . %{py3dir}
-%endif
-
 
 %build
-%if %{with python2}
-%py2_build
-%endif
-
-%if %{with python2}
-pushd %{py3dir}
-%endif
 %py3_build
-%if %{with python2}
-popd
-%endif
 
 %if 0%{!?bootstrap:1}
 pushd doc
@@ -167,23 +93,10 @@ popd
 
 
 %install
-%if %{with python2}
-%py2_install
-# Fix permissions
-chmod 755 %{buildroot}%{python2_sitearch}/bson/*.so
-chmod 755 %{buildroot}%{python2_sitearch}/pymongo/*.so
-%endif
-
-%if %{with python2}
-pushd %{py3dir}
-%endif
 %py3_install
 # Fix permissions
 chmod 755 %{buildroot}%{python3_sitearch}/bson/*.so
 chmod 755 %{buildroot}%{python3_sitearch}/pymongo/*.so
-%if %{with python2}
-popd
-%endif
 
 
 %check
@@ -205,17 +118,7 @@ do
     sleep 1
 done
 
-%if %{with python2}
-python2 setup.py test || (pkill mongod && exit 1)
-%endif
-
-%if %{with python2}
-pushd %{py3dir}
-%endif
 python3 setup.py test || (pkill mongod && exit 1)
-%if %{with python2}
-popd
-%endif
 
 pkill mongod
 %endif
@@ -229,27 +132,10 @@ pkill mongod
 %endif
 
 
-%if %{with python2}
-%files -n python2-bson
-%license LICENSE
-%doc README.rst
-%{python2_sitearch}/bson
-%endif
-
-
 %files -n python3-bson
 %license LICENSE
 %doc README.rst
 %{python3_sitearch}/bson
-
-
-%if %{with python2}
-%files -n python2-pymongo
-%license LICENSE
-%doc README.rst
-%{python2_sitearch}/pymongo
-%{python2_sitearch}/pymongo-%{version}-*.egg-info
-%endif
 
 
 %files -n python3-pymongo
@@ -259,14 +145,6 @@ pkill mongod
 %{python3_sitearch}/pymongo-%{version}-*.egg-info
 
 
-%if %{with python2}
-%files -n python2-pymongo-gridfs
-%license LICENSE
-%doc README.rst
-%{python2_sitearch}/gridfs
-%endif
-
-
 %files -n python3-pymongo-gridfs
 %license LICENSE
 %doc README.rst
@@ -274,6 +152,10 @@ pkill mongod
 
 
 %changelog
+* Mon Jan 28 2019 Miro Hrončok <mhroncok@redhat.com> - 3.7.1-3
+- Subpackages python2-bson, python2-pymongo, python2-pymongo-gridfs have been removed
+  See https://fedoraproject.org/wiki/Changes/Mass_Python_2_Package_Removal
+
 * Mon Dec 10 2018 Honza Horak <hhorak@redhat.com> - 3.7.1-3
 - Add bootstrap macro and python2 condition
 
